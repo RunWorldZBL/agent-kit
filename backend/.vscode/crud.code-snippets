@@ -1,0 +1,883 @@
+{
+  // ============================================
+  // 完整模块模板 (新建 CRUD 模块时使用)
+  // ============================================
+
+  "Route Module - Types (完整 types.ts 模板)": {
+    "prefix": ["crud-types", "types-full"],
+    "scope": "typescript",
+    "description": "创建完整的 types.ts 文件",
+    "body": [
+      "import type { z } from \"zod\";",
+      "",
+      "import type { AdminRouteHandler } from \"@/types/lib\";",
+      "",
+      "import type * as routes from \"./${1:feature}.routes\";",
+      "import type { ${1:feature}ResponseSchema } from \"./${1:feature}.schema\";",
+      "",
+      "/** 实体类型 */",
+      "export type ${2:Feature} = z.infer<typeof ${1:feature}ResponseSchema>;",
+      "",
+      "/** 路由类型映射 */",
+      "type RouteTypes = {",
+      "  [K in keyof typeof routes]: typeof routes[K];",
+      "};",
+      "",
+      "/** 路由 Handler 类型 */",
+      "export type ${2:Feature}RouteHandlerType<T extends keyof RouteTypes> = AdminRouteHandler<RouteTypes[T]>;",
+      ""
+    ]
+  },
+
+  "Route Module - Schema (完整 schema.ts 模板)": {
+    "prefix": ["crud-schema", "schema-full"],
+    "scope": "typescript",
+    "description": "创建完整的 schema.ts 文件",
+    "body": [
+      "import { z } from \"zod\";",
+      "",
+      "import { insert${2:Feature}sSchema, select${2:Feature}sSchema } from \"@/db/schema\";",
+      "import { Status } from \"@/lib/enums\";",
+      "",
+      "/** 创建 Schema */",
+      "export const ${1:feature}CreateSchema = insert${2:Feature}sSchema.extend({",
+      "  ${3:name}: z.string()",
+      "    .min(1, \"${4:名称}不能为空\")",
+      "    .max(128, \"${4:名称}最多128个字符\")",
+      "    .meta({ description: \"${4:名称}\" }),",
+      "});",
+      "",
+      "/** 更新 Schema */",
+      "export const ${1:feature}PatchSchema = insert${2:Feature}sSchema.extend({",
+      "  ${3:name}: z.string()",
+      "    .min(1, \"${4:名称}不能为空\")",
+      "    .max(128, \"${4:名称}最多128个字符\")",
+      "    .meta({ description: \"${4:名称}\" }),",
+      "}).partial().refine(",
+      "  data => Object.keys(data).length > 0,",
+      "  { message: \"至少需要提供一个字段进行更新\" },",
+      ");",
+      "",
+      "/** 查询参数 Schema */",
+      "export const ${1:feature}QuerySchema = z.object({",
+      "  ${3:name}: z.string().optional().meta({ description: \"${4:名称}（模糊搜索）\" }),",
+      "  status: z.enum([Status.ENABLED, Status.DISABLED])",
+      "    .optional()",
+      "    .meta({ description: \"状态\" }),",
+      "});",
+      "",
+      "/** ID 参数 Schema */",
+      "export const ${1:feature}IdParams = z.object({",
+      "  id: z.uuid(\"ID 必须是有效的 UUID\").meta({ description: \"ID\" }),",
+      "});",
+      "",
+      "/** 响应 Schema */",
+      "export const ${1:feature}ResponseSchema = select${2:Feature}sSchema;",
+      "",
+      "/** 列表响应 Schema */",
+      "export const ${1:feature}ListResponse = z.array(${1:feature}ResponseSchema);",
+      ""
+    ]
+  },
+
+  "Route Module - Routes (完整 routes.ts 模板)": {
+    "prefix": ["crud-routes", "routes-full"],
+    "scope": "typescript",
+    "description": "创建完整的 routes.ts 文件",
+    "body": [
+      "import { createRoute } from \"@hono/zod-openapi\";",
+      "",
+      "import { RefineQueryParamsSchema, RefineResultSchema } from \"@/lib/refine-query\";",
+      "import * as HttpStatusCodes from \"@/lib/stoker/http-status-codes\";",
+      "import { jsonContent, jsonContentRequired } from \"@/lib/stoker/openapi/helpers\";",
+      "import { respErrSchema } from \"@/utils\";",
+      "",
+      "import {",
+      "  ${1:feature}CreateSchema,",
+      "  ${1:feature}IdParams,",
+      "  ${1:feature}ListResponse,",
+      "  ${1:feature}PatchSchema,",
+      "  ${1:feature}QuerySchema,",
+      "  ${1:feature}ResponseSchema,",
+      "} from \"./${1:feature}.schema\";",
+      "",
+      "const routePrefix = \"/${2:category}/${1:feature}s\";",
+      "const tags = [\\`\\${routePrefix}（${3:模块描述}）\\`];",
+      "",
+      "/** 获取列表 */",
+      "export const list = createRoute({",
+      "  tags,",
+      "  summary: \"获取${3:模块描述}列表\",",
+      "  method: \"get\",",
+      "  path: routePrefix,",
+      "  request: {",
+      "    query: RefineQueryParamsSchema.extend(${1:feature}QuerySchema.shape),",
+      "  },",
+      "  responses: {",
+      "    [HttpStatusCodes.OK]: jsonContent(",
+      "      RefineResultSchema(${1:feature}ListResponse),",
+      "      \"列表响应成功\",",
+      "    ),",
+      "    [HttpStatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(respErrSchema, \"查询参数验证错误\"),",
+      "  },",
+      "});",
+      "",
+      "/** 创建 */",
+      "export const create = createRoute({",
+      "  tags,",
+      "  summary: \"创建${3:模块描述}\",",
+      "  method: \"post\",",
+      "  path: routePrefix,",
+      "  request: {",
+      "    body: jsonContentRequired(${1:feature}CreateSchema, \"创建参数\"),",
+      "  },",
+      "  responses: {",
+      "    [HttpStatusCodes.CREATED]: jsonContent(",
+      "      RefineResultSchema(${1:feature}ResponseSchema),",
+      "      \"创建成功\",",
+      "    ),",
+      "    [HttpStatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(respErrSchema, \"参数验证失败\"),",
+      "  },",
+      "});",
+      "",
+      "/** 获取详情 */",
+      "export const get = createRoute({",
+      "  tags,",
+      "  summary: \"获取${3:模块描述}详情\",",
+      "  method: \"get\",",
+      "  path: \\`\\${routePrefix}/{id}\\`,",
+      "  request: {",
+      "    params: ${1:feature}IdParams,",
+      "  },",
+      "  responses: {",
+      "    [HttpStatusCodes.OK]: jsonContent(",
+      "      RefineResultSchema(${1:feature}ResponseSchema),",
+      "      \"获取成功\",",
+      "    ),",
+      "    [HttpStatusCodes.BAD_REQUEST]: jsonContent(respErrSchema, \"ID参数错误\"),",
+      "    [HttpStatusCodes.NOT_FOUND]: jsonContent(respErrSchema, \"数据不存在\"),",
+      "  },",
+      "});",
+      "",
+      "/** 更新 */",
+      "export const update = createRoute({",
+      "  tags,",
+      "  summary: \"更新${3:模块描述}\",",
+      "  method: \"patch\",",
+      "  path: \\`\\${routePrefix}/{id}\\`,",
+      "  request: {",
+      "    params: ${1:feature}IdParams,",
+      "    body: jsonContentRequired(${1:feature}PatchSchema, \"更新参数\"),",
+      "  },",
+      "  responses: {",
+      "    [HttpStatusCodes.OK]: jsonContent(",
+      "      RefineResultSchema(${1:feature}ResponseSchema),",
+      "      \"更新成功\",",
+      "    ),",
+      "    [HttpStatusCodes.NOT_FOUND]: jsonContent(respErrSchema, \"数据不存在\"),",
+      "  },",
+      "});",
+      "",
+      "/** 删除 */",
+      "export const remove = createRoute({",
+      "  tags,",
+      "  summary: \"删除${3:模块描述}\",",
+      "  method: \"delete\",",
+      "  path: \\`\\${routePrefix}/{id}\\`,",
+      "  request: {",
+      "    params: ${1:feature}IdParams,",
+      "  },",
+      "  responses: {",
+      "    [HttpStatusCodes.OK]: jsonContent(",
+      "      RefineResultSchema(${1:feature}IdParams),",
+      "      \"删除成功\",",
+      "    ),",
+      "    [HttpStatusCodes.BAD_REQUEST]: jsonContent(respErrSchema, \"ID参数错误\"),",
+      "    [HttpStatusCodes.NOT_FOUND]: jsonContent(respErrSchema, \"数据不存在\"),",
+      "  },",
+      "});",
+      ""
+    ]
+  },
+
+  "Route Module - Handlers (完整 handlers.ts 模板)": {
+    "prefix": ["crud-handlers", "handlers-full"],
+    "scope": "typescript",
+    "description": "创建完整的 handlers.ts 文件",
+    "body": [
+      "import type { z } from \"zod\";",
+      "",
+      "import type { ${2:Feature}RouteHandlerType } from \"./${1:feature}.types\";",
+      "import type { ${1:feature}ResponseSchema } from \"./${1:feature}.schema\";",
+      "",
+      "import { eq } from \"drizzle-orm\";",
+      "",
+      "import db from \"@/db\";",
+      "import { ${1:feature}s } from \"@/db/schema\";",
+      "import { executeRefineQuery, RefineQueryParamsSchema } from \"@/lib/refine-query\";",
+      "import * as HttpStatusCodes from \"@/lib/stoker/http-status-codes\";",
+      "import { Resp } from \"@/utils\";",
+      "",
+      "/** 列表查询 */",
+      "export const list: ${2:Feature}RouteHandlerType<\"list\"> = async (c) => {",
+      "  const query = c.req.query();",
+      "",
+      "  const parseResult = RefineQueryParamsSchema.safeParse(query);",
+      "  if (!parseResult.success) {",
+      "    return c.json(Resp.fail(parseResult.error), HttpStatusCodes.UNPROCESSABLE_ENTITY);",
+      "  }",
+      "",
+      "  const [error, result] = await executeRefineQuery<z.infer<typeof ${1:feature}ResponseSchema>>({",
+      "    table: ${1:feature}s,",
+      "    queryParams: parseResult.data,",
+      "  });",
+      "",
+      "  if (error) {",
+      "    return c.json(Resp.fail(error.message), HttpStatusCodes.INTERNAL_SERVER_ERROR);",
+      "  }",
+      "",
+      "  c.header(\"x-total-count\", result.total.toString());",
+      "  return c.json(Resp.ok(result.data), HttpStatusCodes.OK);",
+      "};",
+      "",
+      "/** 创建 */",
+      "export const create: ${2:Feature}RouteHandlerType<\"create\"> = async (c) => {",
+      "  const body = c.req.valid(\"json\");",
+      "  const { sub } = c.get(\"jwtPayload\");",
+      "",
+      "  const [created] = await db.insert(${1:feature}s).values({",
+      "    ...body,",
+      "    createdBy: sub,",
+      "  }).returning();",
+      "",
+      "  return c.json(Resp.ok(created), HttpStatusCodes.CREATED);",
+      "};",
+      "",
+      "/** 获取详情 */",
+      "export const get: ${2:Feature}RouteHandlerType<\"get\"> = async (c) => {",
+      "  const { id } = c.req.valid(\"param\");",
+      "",
+      "  const item = await db.query.${1:feature}s.findFirst({",
+      "    where: eq(${1:feature}s.id, id),",
+      "  });",
+      "",
+      "  if (!item) {",
+      "    return c.json(Resp.fail(\"数据不存在\"), HttpStatusCodes.NOT_FOUND);",
+      "  }",
+      "",
+      "  return c.json(Resp.ok(item), HttpStatusCodes.OK);",
+      "};",
+      "",
+      "/** 更新 */",
+      "export const update: ${2:Feature}RouteHandlerType<\"update\"> = async (c) => {",
+      "  const { id } = c.req.valid(\"param\");",
+      "  const body = c.req.valid(\"json\");",
+      "  const { sub } = c.get(\"jwtPayload\");",
+      "",
+      "  const [updated] = await db",
+      "    .update(${1:feature}s)",
+      "    .set({",
+      "      ...body,",
+      "      updatedBy: sub,",
+      "    })",
+      "    .where(eq(${1:feature}s.id, id))",
+      "    .returning();",
+      "",
+      "  if (!updated) {",
+      "    return c.json(Resp.fail(\"数据不存在\"), HttpStatusCodes.NOT_FOUND);",
+      "  }",
+      "",
+      "  return c.json(Resp.ok(updated), HttpStatusCodes.OK);",
+      "};",
+      "",
+      "/** 删除 */",
+      "export const remove: ${2:Feature}RouteHandlerType<\"remove\"> = async (c) => {",
+      "  const { id } = c.req.valid(\"param\");",
+      "",
+      "  const [deleted] = await db",
+      "    .delete(${1:feature}s)",
+      "    .where(eq(${1:feature}s.id, id))",
+      "    .returning({ id: ${1:feature}s.id });",
+      "",
+      "  if (!deleted) {",
+      "    return c.json(Resp.fail(\"数据不存在\"), HttpStatusCodes.NOT_FOUND);",
+      "  }",
+      "",
+      "  return c.json(Resp.ok({ id: deleted.id }), HttpStatusCodes.OK);",
+      "};",
+      ""
+    ]
+  },
+
+  "Route Module - Index (完整 index.ts 模板)": {
+    "prefix": ["crud-index", "index-full"],
+    "scope": "typescript",
+    "description": "创建完整的 index.ts 文件",
+    "body": [
+      "import { createRouter } from \"@/lib/internal/create-app\";",
+      "",
+      "import * as handlers from \"./${1:feature}.handlers\";",
+      "import * as routes from \"./${1:feature}.routes\";",
+      "",
+      "const ${1:feature}Router = createRouter()",
+      "  .openapi(routes.list, handlers.list)",
+      "  .openapi(routes.create, handlers.create)",
+      "  .openapi(routes.get, handlers.get)",
+      "  .openapi(routes.update, handlers.update)",
+      "  .openapi(routes.remove, handlers.remove);",
+      "",
+      "export default ${1:feature}Router;",
+      ""
+    ]
+  },
+
+  // ============================================
+  // 单个路由/处理函数模板 (扩展现有模块时使用)
+  // ============================================
+
+  "Route - List (列表查询路由)": {
+    "prefix": ["route-list", "r-list"],
+    "scope": "typescript",
+    "description": "创建列表查询路由定义",
+    "body": [
+      "/** 获取${1:模块描述}列表 */",
+      "export const list = createRoute({",
+      "  tags,",
+      "  summary: \"获取${1:模块描述}列表\",",
+      "  method: \"get\",",
+      "  path: routePrefix,",
+      "  request: {",
+      "    query: RefineQueryParamsSchema.extend(${2:feature}QuerySchema.shape),",
+      "  },",
+      "  responses: {",
+      "    [HttpStatusCodes.OK]: jsonContent(",
+      "      RefineResultSchema(${2:feature}ListResponse),",
+      "      \"列表响应成功\",",
+      "    ),",
+      "    [HttpStatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(respErrSchema, \"查询参数验证错误\"),",
+      "  },",
+      "});",
+      ""
+    ]
+  },
+
+  "Route - Create (创建路由)": {
+    "prefix": ["route-create", "r-create"],
+    "scope": "typescript",
+    "description": "创建新增数据路由定义",
+    "body": [
+      "/** 创建${1:模块描述} */",
+      "export const create = createRoute({",
+      "  tags,",
+      "  summary: \"创建${1:模块描述}\",",
+      "  method: \"post\",",
+      "  path: routePrefix,",
+      "  request: {",
+      "    body: jsonContentRequired(${2:feature}CreateSchema, \"创建参数\"),",
+      "  },",
+      "  responses: {",
+      "    [HttpStatusCodes.CREATED]: jsonContent(",
+      "      RefineResultSchema(${2:feature}ResponseSchema),",
+      "      \"创建成功\",",
+      "    ),",
+      "    [HttpStatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(respErrSchema, \"参数验证失败\"),",
+      "  },",
+      "});",
+      ""
+    ]
+  },
+
+  "Route - Get (详情路由)": {
+    "prefix": ["route-get", "r-get"],
+    "scope": "typescript",
+    "description": "创建获取详情路由定义",
+    "body": [
+      "/** 获取${1:模块描述}详情 */",
+      "export const get = createRoute({",
+      "  tags,",
+      "  summary: \"获取${1:模块描述}详情\",",
+      "  method: \"get\",",
+      "  path: \\`\\${routePrefix}/{id}\\`,",
+      "  request: {",
+      "    params: ${2:feature}IdParams,",
+      "  },",
+      "  responses: {",
+      "    [HttpStatusCodes.OK]: jsonContent(",
+      "      RefineResultSchema(${2:feature}ResponseSchema),",
+      "      \"获取成功\",",
+      "    ),",
+      "    [HttpStatusCodes.BAD_REQUEST]: jsonContent(respErrSchema, \"ID参数错误\"),",
+      "    [HttpStatusCodes.NOT_FOUND]: jsonContent(respErrSchema, \"数据不存在\"),",
+      "  },",
+      "});",
+      ""
+    ]
+  },
+
+  "Route - Update (更新路由)": {
+    "prefix": ["route-update", "r-update"],
+    "scope": "typescript",
+    "description": "创建更新数据路由定义",
+    "body": [
+      "/** 更新${1:模块描述} */",
+      "export const update = createRoute({",
+      "  tags,",
+      "  summary: \"更新${1:模块描述}\",",
+      "  method: \"patch\",",
+      "  path: \\`\\${routePrefix}/{id}\\`,",
+      "  request: {",
+      "    params: ${2:feature}IdParams,",
+      "    body: jsonContentRequired(${2:feature}PatchSchema, \"更新参数\"),",
+      "  },",
+      "  responses: {",
+      "    [HttpStatusCodes.OK]: jsonContent(",
+      "      RefineResultSchema(${2:feature}ResponseSchema),",
+      "      \"更新成功\",",
+      "    ),",
+      "    [HttpStatusCodes.NOT_FOUND]: jsonContent(respErrSchema, \"数据不存在\"),",
+      "  },",
+      "});",
+      ""
+    ]
+  },
+
+  "Route - Remove (删除路由)": {
+    "prefix": ["route-remove", "r-remove"],
+    "scope": "typescript",
+    "description": "创建删除数据路由定义",
+    "body": [
+      "/** 删除${1:模块描述} */",
+      "export const remove = createRoute({",
+      "  tags,",
+      "  summary: \"删除${1:模块描述}\",",
+      "  method: \"delete\",",
+      "  path: \\`\\${routePrefix}/{id}\\`,",
+      "  request: {",
+      "    params: ${1:feature}IdParams,",
+      "  },",
+      "  responses: {",
+      "    [HttpStatusCodes.OK]: jsonContent(",
+      "      RefineResultSchema(${1:feature}IdParams),",
+      "      \"删除成功\",",
+      "    ),",
+      "    [HttpStatusCodes.BAD_REQUEST]: jsonContent(respErrSchema, \"ID参数错误\"),",
+      "    [HttpStatusCodes.NOT_FOUND]: jsonContent(respErrSchema, \"数据不存在\"),",
+      "  },",
+      "});",
+      ""
+    ]
+  },
+
+  "Route - Custom (自定义路由)": {
+    "prefix": ["route-custom", "r-custom"],
+    "scope": "typescript",
+    "description": "创建自定义路由定义",
+    "body": [
+      "/** ${1:路由描述} */",
+      "export const ${2:routeName} = createRoute({",
+      "  tags,",
+      "  summary: \"${1:路由描述}\",",
+      "  method: \"${3|get,post,put,patch,delete|}\",",
+      "  path: \\`\\${routePrefix}/${4:path}\\`,",
+      "  request: {",
+      "    ${5:params: IdUUIDParamsSchema,}",
+      "    ${6:body: jsonContentRequired(z.object({}), \"请求参数\"),}",
+      "  },",
+      "  responses: {",
+      "    [HttpStatusCodes.OK]: jsonContent(",
+      "      RefineResultSchema(z.object({ ${7:result: z.string()} })),",
+      "      \"${8:成功描述}\",",
+      "    ),",
+      "    [HttpStatusCodes.BAD_REQUEST]: jsonContent(respErrSchema, \"参数错误\"),",
+      "  },",
+      "});",
+      ""
+    ]
+  },
+
+  // ============================================
+  // Handler 模板
+  // ============================================
+
+  "Handler - List (列表处理函数)": {
+    "prefix": ["handler-list", "h-list"],
+    "scope": "typescript",
+    "description": "创建列表查询处理函数",
+    "body": [
+      "export const list: ${1:Feature}RouteHandlerType<\"list\"> = async (c) => {",
+      "  const query = c.req.query();",
+      "",
+      "  const parseResult = RefineQueryParamsSchema.safeParse(query);",
+      "  if (!parseResult.success) {",
+      "    return c.json(Resp.fail(parseResult.error), HttpStatusCodes.UNPROCESSABLE_ENTITY);",
+      "  }",
+      "",
+      "  const [error, result] = await executeRefineQuery<z.infer<typeof ${2:feature}ResponseSchema>>({",
+      "    table: ${2:feature}s,",
+      "    queryParams: parseResult.data,",
+      "  });",
+      "",
+      "  if (error) {",
+      "    return c.json(Resp.fail(error.message), HttpStatusCodes.INTERNAL_SERVER_ERROR);",
+      "  }",
+      "",
+      "  c.header(\"x-total-count\", result.total.toString());",
+      "  return c.json(Resp.ok(result.data), HttpStatusCodes.OK);",
+      "};",
+      ""
+    ]
+  },
+
+  "Handler - Create (创建处理函数)": {
+    "prefix": ["handler-create", "h-create"],
+    "scope": "typescript",
+    "description": "创建新增数据处理函数",
+    "body": [
+      "export const create: ${1:Feature}RouteHandlerType<\"create\"> = async (c) => {",
+      "  const body = c.req.valid(\"json\");",
+      "  const { sub } = c.get(\"jwtPayload\");",
+      "",
+      "  const [created] = await db.insert(${2:feature}s).values({",
+      "    ...body,",
+      "    createdBy: sub,",
+      "  }).returning();",
+      "",
+      "  return c.json(Resp.ok(created), HttpStatusCodes.CREATED);",
+      "};",
+      ""
+    ]
+  },
+
+  "Handler - Get (详情处理函数)": {
+    "prefix": ["handler-get", "h-get"],
+    "scope": "typescript",
+    "description": "创建获取详情处理函数",
+    "body": [
+      "export const get: ${1:Feature}RouteHandlerType<\"get\"> = async (c) => {",
+      "  const { id } = c.req.valid(\"param\");",
+      "",
+      "  const item = await db.query.${2:feature}s.findFirst({",
+      "    where: eq(${2:feature}s.id, id),",
+      "  });",
+      "",
+      "  if (!item) {",
+      "    return c.json(Resp.fail(\"数据不存在\"), HttpStatusCodes.NOT_FOUND);",
+      "  }",
+      "",
+      "  return c.json(Resp.ok(item), HttpStatusCodes.OK);",
+      "};",
+      ""
+    ]
+  },
+
+  "Handler - Update (更新处理函数)": {
+    "prefix": ["handler-update", "h-update"],
+    "scope": "typescript",
+    "description": "创建更新数据处理函数",
+    "body": [
+      "export const update: ${1:Feature}RouteHandlerType<\"update\"> = async (c) => {",
+      "  const { id } = c.req.valid(\"param\");",
+      "  const body = c.req.valid(\"json\");",
+      "  const { sub } = c.get(\"jwtPayload\");",
+      "",
+      "  const [updated] = await db",
+      "    .update(${2:feature}s)",
+      "    .set({",
+      "      ...body,",
+      "      updatedBy: sub,",
+      "    })",
+      "    .where(eq(${2:feature}s.id, id))",
+      "    .returning();",
+      "",
+      "  if (!updated) {",
+      "    return c.json(Resp.fail(\"数据不存在\"), HttpStatusCodes.NOT_FOUND);",
+      "  }",
+      "",
+      "  return c.json(Resp.ok(updated), HttpStatusCodes.OK);",
+      "};",
+      ""
+    ]
+  },
+
+  "Handler - Remove (删除处理函数)": {
+    "prefix": ["handler-remove", "h-remove"],
+    "scope": "typescript",
+    "description": "创建删除数据处理函数",
+    "body": [
+      "export const remove: ${1:Feature}RouteHandlerType<\"remove\"> = async (c) => {",
+      "  const { id } = c.req.valid(\"param\");",
+      "",
+      "  const [deleted] = await db",
+      "    .delete(${2:feature}s)",
+      "    .where(eq(${2:feature}s.id, id))",
+      "    .returning({ id: ${2:feature}s.id });",
+      "",
+      "  if (!deleted) {",
+      "    return c.json(Resp.fail(\"数据不存在\"), HttpStatusCodes.NOT_FOUND);",
+      "  }",
+      "",
+      "  return c.json(Resp.ok({ id: deleted.id }), HttpStatusCodes.OK);",
+      "};",
+      ""
+    ]
+  },
+
+  "Handler - Custom (自定义处理函数)": {
+    "prefix": ["handler-custom", "h-custom"],
+    "scope": "typescript",
+    "description": "创建自定义处理函数",
+    "body": [
+      "export const ${1:handlerName}: ${2:Feature}RouteHandlerType<\"${1:handlerName}\"> = async (c) => {",
+      "  ${3:const { id \\} = c.req.valid(\"param\");}",
+      "  ${4:const body = c.req.valid(\"json\");}",
+      "",
+      "  ${5:// 业务逻辑}",
+      "",
+      "  return c.json(Resp.ok({ ${6:result: \"success\"} }), HttpStatusCodes.OK);",
+      "};",
+      ""
+    ]
+  },
+
+  // ============================================
+  // Schema 片段模板
+  // ============================================
+
+  "Schema - Create (创建Schema)": {
+    "prefix": ["schema-create", "s-create"],
+    "scope": "typescript",
+    "description": "创建参数 Schema",
+    "body": [
+      "/** 创建 Schema */",
+      "export const ${1:feature}CreateSchema = insert${2:Feature}sSchema.extend({",
+      "  ${3:name}: z.string()",
+      "    .min(1, \"${4:名称}不能为空\")",
+      "    .max(128, \"${4:名称}最多128个字符\")",
+      "    .meta({ description: \"${4:名称}\" }),",
+      "});",
+      ""
+    ]
+  },
+
+  "Schema - Patch (更新Schema)": {
+    "prefix": ["schema-patch", "s-patch"],
+    "scope": "typescript",
+    "description": "创建更新参数 Schema",
+    "body": [
+      "/** 更新 Schema */",
+      "export const ${1:feature}PatchSchema = insert${2:Feature}sSchema.extend({",
+      "  ${3:name}: z.string()",
+      "    .min(1, \"${4:名称}不能为空\")",
+      "    .max(128, \"${4:名称}最多128个字符\")",
+      "    .meta({ description: \"${4:名称}\" }),",
+      "}).partial().refine(",
+      "  data => Object.keys(data).length > 0,",
+      "  { message: \"至少需要提供一个字段进行更新\" },",
+      ");",
+      ""
+    ]
+  },
+
+  "Schema - Query (查询Schema)": {
+    "prefix": ["schema-query", "s-query"],
+    "scope": "typescript",
+    "description": "创建查询参数 Schema",
+    "body": [
+      "/** 查询参数 Schema */",
+      "export const ${1:feature}QuerySchema = z.object({",
+      "  ${2:name}: z.string().optional().meta({ description: \"${3:名称}（模糊搜索）\" }),",
+      "  status: z.enum([Status.ENABLED, Status.DISABLED])",
+      "    .optional()",
+      "    .meta({ description: \"状态\" }),",
+      "});",
+      ""
+    ]
+  },
+
+  "Schema - ID Params (ID参数Schema)": {
+    "prefix": ["schema-id", "s-id"],
+    "scope": "typescript",
+    "description": "创建 ID 参数 Schema",
+    "body": [
+      "/** ID 参数 Schema */",
+      "export const ${1:feature}IdParams = z.object({",
+      "  id: z.uuid(\"ID 必须是有效的 UUID\").meta({ description: \"ID\" }),",
+      "});",
+      ""
+    ]
+  },
+
+  "Schema - Response (响应Schema)": {
+    "prefix": ["schema-response", "s-response"],
+    "scope": "typescript",
+    "description": "创建响应 Schema",
+    "body": [
+      "/** 响应 Schema */",
+      "export const ${1:feature}ResponseSchema = select${2:Feature}sSchema;",
+      "",
+      "/** 列表响应 Schema */",
+      "export const ${1:feature}ListResponse = z.array(${1:feature}ResponseSchema);",
+      ""
+    ]
+  },
+
+  // ============================================
+  // 常用代码片段
+  // ============================================
+
+  "Import - Routes Common": {
+    "prefix": ["import-routes", "ir"],
+    "scope": "typescript",
+    "description": "导入路由定义常用依赖",
+    "body": [
+      "import { createRoute } from \"@hono/zod-openapi\";",
+      "",
+      "import { RefineQueryParamsSchema, RefineResultSchema } from \"@/lib/refine-query\";",
+      "import * as HttpStatusCodes from \"@/lib/stoker/http-status-codes\";",
+      "import { jsonContent, jsonContentRequired } from \"@/lib/stoker/openapi/helpers\";",
+      "import { respErrSchema } from \"@/utils\";",
+      ""
+    ]
+  },
+
+  "Import - Handlers Common": {
+    "prefix": ["import-handlers", "ih"],
+    "scope": "typescript",
+    "description": "导入处理函数常用依赖",
+    "body": [
+      "import type { z } from \"zod\";",
+      "",
+      "import { eq } from \"drizzle-orm\";",
+      "",
+      "import db from \"@/db\";",
+      "import { ${1:feature}s } from \"@/db/schema\";",
+      "import { executeRefineQuery, RefineQueryParamsSchema } from \"@/lib/refine-query\";",
+      "import * as HttpStatusCodes from \"@/lib/stoker/http-status-codes\";",
+      "import { Resp } from \"@/utils\";",
+      ""
+    ]
+  },
+
+  "Import - Schema Common": {
+    "prefix": ["import-schema", "is"],
+    "scope": "typescript",
+    "description": "导入 Schema 定义常用依赖",
+    "body": [
+      "import { z } from \"zod\";",
+      "",
+      "import { insert${1:Feature}sSchema, select${1:Feature}sSchema } from \"@/db/schema\";",
+      "import { Status } from \"@/lib/enums\";",
+      ""
+    ]
+  },
+
+  "Import - Types Common": {
+    "prefix": ["import-types", "it"],
+    "scope": "typescript",
+    "description": "导入类型定义常用依赖",
+    "body": [
+      "import type { z } from \"zod\";",
+      "",
+      "import type { AdminRouteHandler } from \"@/types/lib\";",
+      "",
+      "import type * as routes from \"./${1:feature}.routes\";",
+      "import type { ${1:feature}ResponseSchema } from \"./${1:feature}.schema\";",
+      ""
+    ]
+  },
+
+  "Response - OK": {
+    "prefix": ["resp-ok", "rok"],
+    "scope": "typescript",
+    "description": "返回成功响应",
+    "body": [
+      "return c.json(Resp.ok(${1:data}), HttpStatusCodes.OK);"
+    ]
+  },
+
+  "Response - Created": {
+    "prefix": ["resp-created", "rcreated"],
+    "scope": "typescript",
+    "description": "返回创建成功响应",
+    "body": [
+      "return c.json(Resp.ok(${1:data}), HttpStatusCodes.CREATED);"
+    ]
+  },
+
+  "Response - Fail": {
+    "prefix": ["resp-fail", "rfail"],
+    "scope": "typescript",
+    "description": "返回失败响应",
+    "body": [
+      "return c.json(Resp.fail(\"${1:错误信息}\"), HttpStatusCodes.${2|BAD_REQUEST,NOT_FOUND,FORBIDDEN,CONFLICT,INTERNAL_SERVER_ERROR|});"
+    ]
+  },
+
+  "Response - Not Found": {
+    "prefix": ["resp-404", "rnotfound"],
+    "scope": "typescript",
+    "description": "返回 404 响应",
+    "body": [
+      "return c.json(Resp.fail(\"数据不存在\"), HttpStatusCodes.NOT_FOUND);"
+    ]
+  },
+
+  "Logger - Info": {
+    "prefix": ["log-info", "logi"],
+    "scope": "typescript",
+    "description": "记录 info 日志",
+    "body": [
+      "logger.info({ ${1:data} }, \"[${2:模块}]: ${3:描述}\");"
+    ]
+  },
+
+  "Logger - Error": {
+    "prefix": ["log-error", "loge"],
+    "scope": "typescript",
+    "description": "记录 error 日志",
+    "body": [
+      "logger.error(${1:error}, \"[${2:模块}]: ${3:描述}\");"
+    ]
+  },
+
+  "Logger - Warn": {
+    "prefix": ["log-warn", "logw"],
+    "scope": "typescript",
+    "description": "记录 warn 日志",
+    "body": [
+      "logger.warn({ ${1:data} }, \"[${2:模块}]: ${3:描述}\");"
+    ]
+  },
+
+  "DB - Transaction": {
+    "prefix": ["db-tx", "transaction"],
+    "scope": "typescript",
+    "description": "数据库事务模板",
+    "body": [
+      "await db.transaction(async (tx) => {",
+      "  ${1:// 事务操作}",
+      "});"
+    ]
+  },
+
+  "Redis - Cache Clear": {
+    "prefix": ["redis-del", "cache-clear"],
+    "scope": "typescript",
+    "description": "异步清除 Redis 缓存",
+    "body": [
+      "void redisClient.del(\\`${1:CACHE_PREFIX}\\${${2:key}}\\`)",
+      "  .catch(error => logger.warn({ error }, \"[${3:模块}]: 清除缓存失败\"));"
+    ]
+  },
+
+  "Zod - Object with Meta": {
+    "prefix": ["zod-object", "zo"],
+    "scope": "typescript",
+    "description": "创建带描述的 Zod 对象",
+    "body": [
+      "z.object({",
+      "  ${1:field}: z.${2:string}().meta({ description: \"${3:描述}\" }),",
+      "})"
+    ]
+  }
+}
