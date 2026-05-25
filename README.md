@@ -141,7 +141,7 @@ CI（持续集成）会用这一条链路再加上后端测试：
 pnpm check:ci
 ```
 
-根目录的 `pnpm test` 只跑后端测试（backend tests only，后端测试）；前端测试已经包含在 `pnpm check` 里了。
+根目录的 `pnpm test` 只跑后端测试；前端测试已经包含在 `pnpm check` 里了。
 
 ## OpenSpec
 
@@ -160,8 +160,8 @@ openspec/
 1. 先把 `project_introduction.md` 改成你的产品简介。
 2. 保留 `AGENTS.md` 和 `docs/harness.md` 作为代理层的规则。
 3. 把产品契约放到 `shared/api-contracts/src/`。
-4. 用 `backend/AGENTS.md` 和 backend skills（后端技能）实现后端行为。
-5. 用 `frontend/AGENTS.md` 和 frontend skills（前端技能）实现前端页面。
+4. 用 `backend/AGENTS.md` 和 backend skills 实现后端行为。
+5. 用 `frontend/AGENTS.md` 和 frontend skills 实现前端页面。
 6. 涉及跨层、跨契约、用户可见行为变化时，优先走 OpenSpec。
 
 ## 共享契约示例
