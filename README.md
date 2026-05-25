@@ -1,109 +1,94 @@
 # Kit
 
-Kit is a fullstack template for Codex-driven product work.
+Kit 是一个面向 Codex 驱动开发的全栈模板（fullstack template，前后端一体的模板）。
 
-It gives you three things at once:
+它同时提供三样东西：
 
-1. a real backend foundation
-2. a real frontend foundation
-3. a real agent harness that tells Codex how to work in this repo
+1. 一个可以直接复用的后端基础
+2. 一个可以直接复用的前端基础
+3. 一套告诉 Codex 该怎么工作的 agent harness（代理开发框架，负责约束代理如何思考、实现和验证）
 
-The point is not just to scaffold code. The point is to start from a repo where
-intent, implementation rules, runtime state, and verification are already
-separated.
+这份模板的目标不是“先生成一点代码”，而是让你从一开始就站在一个把意图、实现规则、运行态和验证机制分开的仓库上。
 
-## Why It Exists
+## 为什么存在
 
-Most AI-assisted repos fail because product intent, temporary notes, coding
-rules, and verification steps get mixed together.
+AI 辅助开发最常见的问题，是把产品意图、临时笔记、实现约定和验证步骤全部混进一段 prompt（提示词）或一份文档里。
 
-Kit keeps them apart:
+Kit 把它们拆开：
 
-| Axis | Responsibility | Where It Lives |
+| 轴 | 职责 | 放在哪里 |
 | --- | --- | --- |
-| WHAT | product intent and accepted behavior | `openspec/` |
-| HOW-tech | backend/frontend implementation rules | `AGENTS.md`, domain skills |
-| STATE | current task progress and recovery notes | `.planning/<date>-<slug>/` |
-| DISCIPLINE | TDD, verification, review, debugging | `.codex/skills/` |
+| WHAT | 产品意图和可接受行为 | `openspec/` |
+| HOW-tech | 后端和前端的实现规则 | `AGENTS.md`、各域 skills（技能） |
+| STATE | 当前任务进度和恢复信息 | `.planning/<date>-<slug>/` |
+| DISCIPLINE | TDD（测试驱动开发）、验证、评审、调试 | `.codex/skills/` |
 
-That split is the template's real value.
+这种拆分，才是模板真正的价值。它能让长任务更容易检查、更容易恢复，也更容易复盘。
 
-## What You Get
+## 你会得到什么
 
-- **Codex-first harness**: root and domain `AGENTS.md` files route the agent
-  before it edits code.
-- **OpenSpec workflow**: non-trivial behavior starts in `openspec/changes/<change>/`.
-- **Project-level skills**: OpenSpec, TDD, planning-with-files, backend, and
-  frontend playbooks live in the repo instead of on one person's machine.
-- **TDD discipline**: behavior changes start from a failing test, then move
-  through red, green, and refactor.
-- **Shared contracts**: `shared/api-contracts` holds framework-free Zod
-  schemas and inferred TypeScript types.
-- **Backend foundation**: Hono, Drizzle, PostgreSQL, Redis, BullMQ, OpenAPI,
-  Vitest, Effect, Casbin, Docker, migrations, scripts, and plugins.
-- **Frontend foundation**: React, Vite, TypeScript, Tailwind CSS, Radix-style
-  UI primitives, React Query, Zustand, lucide-react, and Vitest.
-- **Sensors**: GitHub Actions, `pnpm check`, and `tools/harness-doctor.mjs`
-  keep the template honest.
+- **Codex 优先的 harness（代理框架）**：根目录和各域的 `AGENTS.md` 会先把规则讲清楚，再让代理动代码。
+- **OpenSpec 工作流（Specification-Driven Development，规格驱动开发）**：非平凡行为先进入 `openspec/changes/<change>/`，再进入实现。
+- **项目级 skills（技能）**：OpenSpec、TDD、planning-with-files（基于文件的运行态规划）、后端和前端 playbook（操作手册）都在仓库里，不依赖某台机器的全局配置。
+- **TDD 纪律**：行为改动先写失败测试，再进入 red / green / refactor（红灯、绿灯、重构）。
+- **共享契约（shared contracts，前后端共用的接口约束）**：`shared/api-contracts` 保存框架无关的 Zod schema（运行时校验）和 TypeScript 类型。
+- **后端基础**：Hono、Drizzle、PostgreSQL、Redis、BullMQ、OpenAPI、Vitest、Effect、Casbin、Docker、migrations（迁移）、scripts（脚本）、plugins（插件）。
+- **前端基础**：React、Vite、TypeScript、Tailwind CSS、Radix 风格 UI primitives（基础组件）、React Query、Zustand、lucide-react、Vitest。
+- **健康检查（health checks，自动检查仓库是否漂移）**：GitHub Actions、`pnpm check` 和 `tools/harness-doctor.mjs` 负责盯住漂移。
 
-Need the details? Start with [AGENTS.md](AGENTS.md) and
-[docs/harness.md](docs/harness.md), then drill into `backend/README.md` or
-`frontend/README.md` if you are changing a specific tier.
+如果你想看细节，先读 [AGENTS.md](AGENTS.md) 和 [docs/harness.md](docs/harness.md)，再去看 `backend/README.md` 或 `frontend/README.md`。
 
-This template is English-first. If a downstream product is Chinese-first, add a
-`README.zh-CN.md` beside this file and keep the two docs aligned at the level
-that matters for users.
+这个模板以中文优先；如果下游产品是英文优先，可以再加一份 `README.en.md`，并保持两份文档在对用户重要的层面一致。
 
-## Architecture
+## 目录结构
 
 ```text
 kit/
-  .codex/skills/              # project skills: OpenSpec, TDD, planning
+  .codex/skills/              # 项目 skills（技能）：OpenSpec、TDD、planning
   .github/workflows/          # CI
-  backend/                    # Hono API foundation
-    .codex/skills/            # backend-specific playbooks
-    migrations/               # migration history and seed data
-    plugins/                  # build/runtime plugins
-    scripts/                  # backend utilities
+  backend/                    # Hono API 基础
+    .codex/skills/            # 后端专用 playbook（操作手册）
+    migrations/               # 迁移历史与 seed 数据
+    plugins/                  # 构建和运行插件
+    scripts/                  # 后端工具脚本
     src/
     tests/
     docker-compose.yml
     .env.example
-  frontend/                   # React application foundation
-    .codex/skills/            # frontend-specific playbooks
+  frontend/                   # React 应用基础
+    .codex/skills/            # 前端专用 playbook（操作手册）
     public/
     src/
     components.json
     Dockerfile
-  shared/api-contracts/       # shared Zod schemas and inferred types
-  openspec/                   # SDD source of truth
+  shared/api-contracts/       # 共享 Zod schema 和推导类型
+  openspec/                   # SDD（Specification-Driven Development，规格驱动开发）源头
     changes/archive/
     specs/
   docs/
-    examples/                 # non-active examples, including OpenSpec shape
-    harness.md                # rationale behind the agent workflow
-  walkthrough.md              # placeholder walkthrough for derived products
-  project_introduction.md      # placeholder product brief for derived products
-  AGENTS.md                   # root operating contract for Codex
+    examples/                 # 非活跃示例，包括 OpenSpec 形状
+    harness.md                # 代理工作流的理由说明
+  walkthrough.md              # 衍生产品用的实施 walkthrough（占位文件）
+  project_introduction.md      # 衍生产品用的项目简介（占位文件）
+  AGENTS.md                   # Codex 的根操作契约
 ```
 
-## Agent Workflow
+## 代理工作流
 
-Use the workflow files and skills directly:
+直接使用这些 workflow 文件和 skills（技能）：
 
-- Explore: [`.codex/skills/openspec-explore/SKILL.md`](.codex/skills/openspec-explore/SKILL.md)
-- Propose: [`.codex/skills/openspec-propose/SKILL.md`](.codex/skills/openspec-propose/SKILL.md)
-- Apply: [`.codex/skills/openspec-apply-change/SKILL.md`](.codex/skills/openspec-apply-change/SKILL.md)
-- Archive: [`.codex/skills/openspec-archive-change/SKILL.md`](.codex/skills/openspec-archive-change/SKILL.md)
-- TDD: [`.codex/skills/test-driven-development/SKILL.md`](.codex/skills/test-driven-development/SKILL.md)
-- Planning: [`.codex/skills/planning-with-files/SKILL.md`](.codex/skills/planning-with-files/SKILL.md)
+- Explore（探索模式）：[`.codex/skills/openspec-explore/SKILL.md`](.codex/skills/openspec-explore/SKILL.md)
+- Propose（提出变更）：[`.codex/skills/openspec-propose/SKILL.md`](.codex/skills/openspec-propose/SKILL.md)
+- Apply（执行变更）：[`.codex/skills/openspec-apply-change/SKILL.md`](.codex/skills/openspec-apply-change/SKILL.md)
+- Archive（归档变更）：[`.codex/skills/openspec-archive-change/SKILL.md`](.codex/skills/openspec-archive-change/SKILL.md)
+- TDD（测试驱动开发）：[`.codex/skills/test-driven-development/SKILL.md`](.codex/skills/test-driven-development/SKILL.md)
+- Planning（基于文件的运行态规划）：[`.codex/skills/planning-with-files/SKILL.md`](.codex/skills/planning-with-files/SKILL.md)
 
-The short operating contract is [AGENTS.md](AGENTS.md). The longer rationale is
-[docs/harness.md](docs/harness.md).
+短版操作契约在 [AGENTS.md](AGENTS.md)，更完整的理由说明在 [docs/harness.md](docs/harness.md)。
 
-## Quick Start
+## 快速开始
 
-Open two terminals:
+打开两个终端：
 
 ```bash
 pnpm install
@@ -114,47 +99,53 @@ pnpm dev:be
 pnpm dev:fe
 ```
 
-Backend and frontend run as separate workspace packages so each tier can evolve
-without hiding its own conventions.
+后端和前端是分开的 workspace（工作区）包，这样每一层都能保留自己的约定，不会互相吞掉。
 
-## Local Services
+## 本地依赖
 
-If you want to run backend integration tests locally, start PostgreSQL and Redis
-first:
+如果你想在本地跑后端集成测试，先启动 PostgreSQL 和 Redis：
 
 ```bash
 cd backend
 docker compose up -d postgres redis
 ```
 
-Then run migrations or the full local check as needed.
+然后再跑迁移或完整校验。
 
-## Verification
+## 验证
 
-Run the template-level check before claiming work is complete:
+先跑模板级检查：
 
 ```bash
 pnpm check
 ```
 
-That runs:
+它会依次执行：
 
-- harness structure check
-- shared contracts typecheck
-- backend typecheck
-- frontend build
-- frontend tests
-- repository lint
+- harness（代理框架）结构检查
+- 共享契约 typecheck（类型检查）
+- 后端 typecheck（类型检查）
+- 前端 build（构建）
+- 前端测试
+- 仓库 lint（静态检查）
 
-For a narrower harness-only check, use:
+如果你只想检查 harness 本身：
 
 ```bash
 pnpm harness:check
 ```
 
+CI（持续集成）会用这一条链路再加上后端测试：
+
+```bash
+pnpm check:ci
+```
+
+根目录的 `pnpm test` 只跑后端测试（backend tests only，后端测试）；前端测试已经包含在 `pnpm check` 里了。
+
 ## OpenSpec
 
-The template keeps active OpenSpec state empty by default:
+默认情况下，模板只保留空的 OpenSpec 结构：
 
 ```text
 openspec/
@@ -162,21 +153,18 @@ openspec/
   specs/
 ```
 
-Use [docs/examples/openspec-change-example](docs/examples/openspec-change-example)
-as a shape reference when starting a real change. Copy the example into
-`openspec/changes/<change-name>/` instead of editing the example in place.
+当你要开始一个真实变更时，可以直接拿 [docs/examples/openspec-change-example](docs/examples/openspec-change-example) 做形状参考，然后复制到 `openspec/changes/<change-name>/`。
 
-## Creating A Product From Kit
+## 从 Kit 创建新产品
 
-1. Replace `project_introduction.md` with your product brief.
-2. Keep `AGENTS.md` and `docs/harness.md` as the agent operating layer.
-3. Add product contracts under `shared/api-contracts/src/`.
-4. Add backend behavior using `backend/AGENTS.md` and backend skills.
-5. Add frontend screens using `frontend/AGENTS.md` and frontend skills.
-6. Use OpenSpec for behavior that crosses tiers or changes user-visible
-   contracts.
+1. 先把 `project_introduction.md` 改成你的产品简介。
+2. 保留 `AGENTS.md` 和 `docs/harness.md` 作为代理层的规则。
+3. 把产品契约放到 `shared/api-contracts/src/`。
+4. 用 `backend/AGENTS.md` 和 backend skills（后端技能）实现后端行为。
+5. 用 `frontend/AGENTS.md` 和 frontend skills（前端技能）实现前端页面。
+6. 涉及跨层、跨契约、用户可见行为变化时，优先走 OpenSpec。
 
-## Shared Contracts Example
+## 共享契约示例
 
 ```ts
 import { itemListQuerySchema, type Item } from "@kit/api-contracts";
@@ -184,31 +172,30 @@ import { itemListQuerySchema, type Item } from "@kit/api-contracts";
 const parsed = itemListQuerySchema.parse({ page: 1, pageSize: 20 });
 ```
 
-## Template Boundaries
+## 模板边界
 
-Kit intentionally does not include product-specific business logic. The starter
-frontend uses neutral `items` mock data only to prove the wiring between React,
-React Query, and `@kit/api-contracts`.
+Kit 不包含具体业务逻辑。前端里现在的 `items` mock 数据，只是为了证明 React、React Query 和 `@kit/api-contracts` 之间的 wiring（连线）是通的。
 
-Historical planning archives, screenshots, and product-specific docs are not
-part of this template. New products should create their own archives using the
-archive naming rules in `docs/harness.md`.
+历史 planning 归档、截图和产品型文档都不属于模板本体。新产品应该按 `docs/harness.md` 里的归档命名规则，创建自己的归档目录。
 
-## Commands
+`walkthrough.md` 和 `project_introduction.md` 是给下游产品预留的占位文件：前者写实施 walkthrough（实施过程说明），后者写产品简介。
+
+## 命令
 
 ```bash
-pnpm install              # install workspace dependencies
-pnpm dev:be               # run backend dev server
-pnpm dev:fe               # run frontend dev server
-pnpm build:be             # build backend
-pnpm build:fe             # build frontend
-pnpm typecheck:contracts  # check shared contracts
-pnpm lint                 # lint all workspace packages
-pnpm test                 # run backend tests
-pnpm check                # run the standard local verification set
-pnpm harness:check        # verify agent harness structure
+pnpm install              # 安装 workspace 依赖
+pnpm dev:be               # 启动后端开发服务
+pnpm dev:fe               # 启动前端开发服务
+pnpm build:be             # 构建后端
+pnpm build:fe             # 构建前端
+pnpm typecheck:contracts  # 检查共享契约
+pnpm lint                 # 检查全部 workspace 包
+pnpm test                 # 只跑后端测试
+pnpm check                # 跑模板标准本地验证链路
+pnpm check:ci             # 跑本地验证链路 + 后端测试
+pnpm harness:check        # 检查 harness 结构是否漂移
 ```
 
-## License
+## 许可证
 
-MIT. See [LICENSE](LICENSE).
+MIT。见 [LICENSE](LICENSE)。
