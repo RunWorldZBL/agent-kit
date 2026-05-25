@@ -23,17 +23,17 @@ Kit 把它们拆开：
 | STATE | 当前任务进度和恢复信息 | `.planning/<date>-<slug>/` |
 | DISCIPLINE | TDD（测试驱动开发）、验证、评审、调试 | `.codex/skills/` |
 
-这种拆分，才是模板真正的价值。它能让长任务更容易检查、更容易恢复，也更容易复盘。
+这种拆分让长任务更容易检查、恢复和复盘，也是这份模板真正的价值。
 
 ## 你会得到什么
 
 - **Codex 优先的 harness（代理框架）**：根目录和各域的 `AGENTS.md` 会先把规则讲清楚，再让代理动代码。
 - **OpenSpec 工作流（Specification-Driven Development，规格驱动开发）**：非平凡行为先进入 `openspec/changes/<change>/`，再进入实现。
-- **项目级 skills（技能）**：OpenSpec、TDD、planning-with-files（基于文件的运行态规划）、后端和前端 playbook（操作手册）都在仓库里，不依赖某台机器的全局配置。
+- **项目级 skills（技能）**：OpenSpec、TDD、planning-with-files（基于文件的运行态规划）、后端和前端专用 skills 都在仓库里，不依赖某台机器的全局配置。
 - **TDD 纪律**：行为改动先写失败测试，再进入 red / green / refactor（红灯、绿灯、重构）。
 - **共享契约（shared contracts，前后端共用的接口约束）**：`shared/api-contracts` 保存框架无关的 Zod schema（运行时校验）和 TypeScript 类型。
-- **后端基础**：Hono、Drizzle、PostgreSQL、Redis、BullMQ、OpenAPI、Vitest、Effect、Casbin、Docker、migrations（迁移）、scripts（脚本）、plugins（插件）。
-- **前端基础**：React、Vite、TypeScript、Tailwind CSS、Radix 风格 UI primitives（基础组件）、React Query、Zustand、lucide-react、Vitest。
+- **后端基础**：运行时栈包括 Hono、Drizzle、PostgreSQL、Redis、BullMQ、OpenAPI、Effect、Casbin；工程化包括 Vitest、Docker、migrations（迁移）、scripts（脚本）、plugins（插件）。
+- **前端基础**：运行时栈包括 React、React Query、Zustand、Radix 风格 UI primitives（基础组件）、lucide-react；工程化包括 Vite、TypeScript、Tailwind CSS、Vitest。
 - **健康检查（health checks，自动检查仓库是否漂移）**：GitHub Actions、`pnpm check` 和 `tools/harness-doctor.mjs` 负责盯住漂移。
 
 如果你想看细节，先读 [AGENTS.md](AGENTS.md) 和 [docs/harness.md](docs/harness.md)，再去看 `backend/README.md` 或 `frontend/README.md`。
@@ -47,7 +47,7 @@ kit/
   .codex/skills/              # 项目 skills（技能）：OpenSpec、TDD、planning
   .github/workflows/          # CI
   backend/                    # Hono API 基础
-    .codex/skills/            # 后端专用 playbook（操作手册）
+    .codex/skills/            # 后端专用 skills
     migrations/               # 迁移历史与 seed 数据
     plugins/                  # 构建和运行插件
     scripts/                  # 后端工具脚本
@@ -56,20 +56,20 @@ kit/
     docker-compose.yml
     .env.example
   frontend/                   # React 应用基础
-    .codex/skills/            # 前端专用 playbook（操作手册）
+    .codex/skills/            # 前端专用 skills
     public/
     src/
     components.json
     Dockerfile
   shared/api-contracts/       # 共享 Zod schema 和推导类型
-  openspec/                   # SDD（Specification-Driven Development，规格驱动开发）源头
+  openspec/                   # OpenSpec 源头
     changes/archive/
     specs/
   docs/
-    examples/                 # 非活跃示例，包括 OpenSpec 形状
+    examples/                 # 非活跃示例，包括 OpenSpec 文件结构样例
     harness.md                # 代理工作流的理由说明
   walkthrough.md              # 衍生产品用的实施 walkthrough（占位文件）
-  project_introduction.md      # 衍生产品用的项目简介（占位文件）
+  project_introduction.md     # 衍生产品用的项目简介（占位文件）
   AGENTS.md                   # Codex 的根操作契约
 ```
 
@@ -101,7 +101,7 @@ pnpm dev:fe
 
 后端和前端是分开的 workspace（工作区）包，这样每一层都能保留自己的约定，不会互相吞掉。
 
-## 本地依赖
+## 启动本地依赖服务
 
 如果你想在本地跑后端集成测试，先启动 PostgreSQL 和 Redis：
 
@@ -153,7 +153,7 @@ openspec/
   specs/
 ```
 
-当你要开始一个真实变更时，可以直接拿 [docs/examples/openspec-change-example](docs/examples/openspec-change-example) 做形状参考，然后复制到 `openspec/changes/<change-name>/`。
+当你要开始一个真实变更时，可以直接拿 [docs/examples/openspec-change-example](docs/examples/openspec-change-example) 做文件结构参考，然后复制到 `openspec/changes/<change-name>/`。
 
 ## 从 Kit 创建新产品
 
