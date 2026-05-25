@@ -1,9 +1,16 @@
 {
   "cSpell.words": [
     "bullmq",
+    "casbin",
     "codex",
     "drizzle",
+    "hono",
+    "lucide",
+    "noemit",
     "openspec",
-    "opsx"
+    "opsx",
+    "tsgo",
+    "vitest",
+    "zustand"
   ]
 }
